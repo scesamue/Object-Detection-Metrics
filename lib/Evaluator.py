@@ -23,6 +23,8 @@ from utils import *
 class Evaluator:
     def GetPascalVOCMetrics(self,
                             boundingboxes,
+                            inference_imgs,
+                            fscore,
                             IOUThreshold=0.5,
                             method=MethodAveragePrecision.EveryPointInterpolation):
         """Get the metrics used by the VOC Pascal 2012 challenge.
@@ -132,49 +134,52 @@ class Evaluator:
 
             ################################################## ADDED #########################################
 
-
             #compute f2 score, which we want to maximize
-            f_two = np.divide(2*np.multiply(rec, prec), rec + prec)
-            max_f_two = np.amax(f_two)
-            print('the maxmium f2 score is: ', max_f_two, '\n')
-            max_pos = np.where(f_two == max_f_two)[0]
-            confidence_thres = dects[int(max_pos)][2]
-            print('this f2 score corresponds to a confidence threshold of: %f, where we get a precision of %f and a recall of %f' \
-                % (confidence_thres, prec[max_pos], rec[max_pos]))
+            if fscore:
+                f_two = np.divide(2*np.multiply(rec, prec), rec + prec)
+                max_f_two = np.amax(f_two)
+                print('the maximum f2 score is: ', max_f_two, '\n')
+                max_pos = np.where(f_two == max_f_two)[0]
+                confidence_thres = dects[int(max_pos)][2]
+                print('this f2 score corresponds to a confidence threshold of: %f, where we get a precision of %f and a recall of %f' \
+                    % (confidence_thres, prec[max_pos], rec[max_pos]))
+            else:
+                max_pos = 0
             
             
             #create list of 10 randomly picked image names to do inference on
-            img_list = {}
-            while len(img_list) < 10:
-                keylist = list(gts.keys())
-                gt_key = keylist [np.random.randint(0, len(keylist))]
-                img_list[gt_key] = {} 
-                if len(gts[gt_key]) > 1:
-                    pick = [ gts[gt_key][0][3], gts[gt_key][1][3] ]
-                else:
-                    pick = [ gts[gt_key][0][3] ]
+            if inference_imgs:
+                img_list = {}
+                while len(img_list) < 10:
+                    keylist = list(gts.keys())
+                    gt_key = keylist [np.random.randint(0, len(keylist))]
+                    img_list[gt_key] = {} 
+                    if len(gts[gt_key]) > 1:
+                        pick = [ gts[gt_key][0][3], gts[gt_key][1][3] ]
+                    else:
+                        pick = [ gts[gt_key][0][3] ]
 
-                img_list[gt_key]['gt'] = pick
+                    img_list[gt_key]['gt'] = pick
 
-                f_positive = []
-                t_positive = []
-                for d in dects:
-                    if gt_key in d:
-                        index = dects.index(d)
-                        if dects[index][2] > 0.43:
-                            if FP[index] == 1:
-                                info = [dects[index][3], dects[index][2]]
-                                f_positive.append(info)
-                            elif TP[index] == 1:
-                                info = [dects[index][3], dects[index][2]]
-                                t_positive.append(info)
-                img_list[gt_key]['TP'] = t_positive
-                img_list[gt_key]['FP'] = f_positive
+                    f_positive = []
+                    t_positive = []
+                    for d in dects:
+                        if gt_key in d:
+                            index = dects.index(d)
+                            if dects[index][2] > 0.43:
+                                if FP[index] == 1:
+                                    info = [dects[index][3], dects[index][2]]
+                                    f_positive.append(info)
+                                elif TP[index] == 1:
+                                    info = [dects[index][3], dects[index][2]]
+                                    t_positive.append(info)
+                    img_list[gt_key]['TP'] = t_positive
+                    img_list[gt_key]['FP'] = f_positive
 
-            import pickle
+                import pickle
 
-            with open('/home/scesamue/Desktop/inference.pickle', 'wb') as text:
-                pickle.dump(img_list, text, protocol=pickle.HIGHEST_PROTOCOL)
+                with open('../../../data/inference.pickle', 'wb') as text:
+                    pickle.dump(img_list, text, protocol=pickle.HIGHEST_PROTOCOL)
 
 
             ################################################## FINISH ADDED ####################################
@@ -203,6 +208,8 @@ class Evaluator:
 
     def PlotPrecisionRecallCurve(self,
                                  boundingBoxes,
+                                 fscore,
+                                 inference_imgs,
                                  IOUThreshold=0.5,
                                  method=MethodAveragePrecision.EveryPointInterpolation,
                                  showAP=False,
@@ -240,7 +247,7 @@ class Evaluator:
             dict['total TP']: total number of True Positive detections;
             dict['total FP']: total number of False Negative detections;
         """
-        results = self.GetPascalVOCMetrics(boundingBoxes, IOUThreshold, method)
+        results = self.GetPascalVOCMetrics(boundingBoxes, inference_imgs, fscore, IOUThreshold, method)
         result = None
         # Each resut represents a class
         for result in results:
@@ -276,7 +283,10 @@ class Evaluator:
                             nprec.append(max([mpre[int(id)] for id in idxEq]))
                     plt.plot(nrec, nprec, 'or', label='11-point interpolated precision')
             plt.plot(recall, precision, label='Precision')
-            plt.plot (opt_coord[0], opt_coord[1], marker = 'o', fillstyle = 'none', label = 'optimal threshold')
+
+            if fscore:
+                plt.plot (opt_coord[0], opt_coord[1], marker = 'o', fillstyle = 'none', label = 'optimal threshold')
+
             plt.xlabel('recall')
             plt.ylabel('precision')
             if showAP:

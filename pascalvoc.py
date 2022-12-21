@@ -57,7 +57,8 @@ from BoundingBoxes import BoundingBoxes
 from Evaluator import *
 from utils import BBFormat
 
-
+def fun():
+    print('hello')
 # Validate formats
 def ValidateFormats(argFormat, argName, errors):
     if argFormat == 'xywh':
@@ -247,7 +248,7 @@ parser.add_argument('-gtformat',
 parser.add_argument('-detformat',
                     dest='detFormat',
                     metavar='',
-                    default='xywh',
+                    default='xyrb',
                     help='format of the coordinates of the detected bounding boxes '
                     '(\'xywh\': <left> <top> <width> <height>) '
                     'or (\'xyrb\': <left> <top> <right> <bottom>)')
@@ -277,6 +278,16 @@ parser.add_argument('-np',
                     dest='showPlot',
                     action='store_false',
                     help='no plot is shown during execution')
+parser.add_argument('-f',
+                    '--fscore',
+                    metavar='',
+                    default = False,
+                    help="select True if you want to compute optimal f1 score and corresponding confidence threshold, needed if inferenceimgs is True")
+parser.add_argument('-ii',
+                    '--inferenceimgs',
+                    metavar='',
+                    default= False,
+                    help="select True if you want to do inference on 10 random images")
 args = parser.parse_args()
 
 iouThreshold = args.iouThreshold
@@ -380,7 +391,9 @@ detections = evaluator.PlotPrecisionRecallCurve(
     showAP=True,  # Show Average Precision in the title of the plot
     showInterpolatedPrecision=False,  # Don't plot the interpolated precision curve
     savePath=savePath,
-    showGraphic=showPlot)
+    showGraphic=showPlot,
+    inference_imgs = args.inferenceimgs,
+    fscore = args.fscore)
 
 f = open(os.path.join(savePath, 'results.txt'), 'w')
 f.write('Object Detection Metrics\n')
