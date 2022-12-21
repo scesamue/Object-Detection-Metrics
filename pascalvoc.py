@@ -399,6 +399,7 @@ for metricsPerClass in detections:
     total_TP = metricsPerClass['total TP']
     total_FP = metricsPerClass['total FP']
 
+
     if totalPositives > 0:
         validClasses = validClasses + 1
         acc_AP = acc_AP + ap

@@ -128,6 +128,58 @@ class Evaluator:
             acc_TP = np.cumsum(TP)
             rec = acc_TP / npos
             prec = np.divide(acc_TP, (acc_FP + acc_TP))
+
+
+            ################################################## ADDED #########################################
+
+
+            #compute f2 score, which we want to maximize
+            f_two = np.divide(2*np.multiply(rec, prec), rec + prec)
+            max_f_two = np.amax(f_two)
+            print('the maxmium f2 score is: ', max_f_two, '\n')
+            max_pos = np.where(f_two == max_f_two)[0]
+            confidence_thres = dects[int(max_pos)][2]
+            print('this f2 score corresponds to a confidence threshold of: %f, where we get a precision of %f and a recall of %f' \
+                % (confidence_thres, prec[max_pos], rec[max_pos]))
+            
+            
+            #create list of 10 randomly picked image names to do inference on
+            img_list = {}
+            while len(img_list) < 10:
+                keylist = list(gts.keys())
+                gt_key = keylist [np.random.randint(0, len(keylist))]
+                img_list[gt_key] = {} 
+                if len(gts[gt_key]) > 1:
+                    pick = [ gts[gt_key][0][3], gts[gt_key][1][3] ]
+                else:
+                    pick = [ gts[gt_key][0][3] ]
+
+                img_list[gt_key]['gt'] = pick
+
+                f_positive = []
+                t_positive = []
+                for d in dects:
+                    if gt_key in d:
+                        index = dects.index(d)
+                        if dects[index][2] > 0.43:
+                            if FP[index] == 1:
+                                info = [dects[index][3], dects[index][2]]
+                                f_positive.append(info)
+                            elif TP[index] == 1:
+                                info = [dects[index][3], dects[index][2]]
+                                t_positive.append(info)
+                img_list[gt_key]['TP'] = t_positive
+                img_list[gt_key]['FP'] = f_positive
+
+            import pickle
+
+            with open('/home/scesamue/Desktop/inference.pickle', 'wb') as text:
+                pickle.dump(img_list, text, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+            ################################################## FINISH ADDED ####################################
+
+            
             # Depending on the method, call the right implementation
             if method == MethodAveragePrecision.EveryPointInterpolation:
                 [ap, mpre, mrec, ii] = Evaluator.CalculateAveragePrecision(rec, prec)
@@ -143,7 +195,8 @@ class Evaluator:
                 'interpolated recall': mrec,
                 'total positives': npos,
                 'total TP': np.sum(TP),
-                'total FP': np.sum(FP)
+                'total FP': np.sum(FP),
+                'optimal confidence coord': [rec[max_pos], prec[max_pos]]
             }
             ret.append(r)
         return ret
@@ -203,6 +256,7 @@ class Evaluator:
             npos = result['total positives']
             total_tp = result['total TP']
             total_fp = result['total FP']
+            opt_coord = result['optimal confidence coord']
 
             plt.close()
             if showInterpolatedPrecision:
@@ -222,12 +276,13 @@ class Evaluator:
                             nprec.append(max([mpre[int(id)] for id in idxEq]))
                     plt.plot(nrec, nprec, 'or', label='11-point interpolated precision')
             plt.plot(recall, precision, label='Precision')
+            plt.plot (opt_coord[0], opt_coord[1], marker = 'o', fillstyle = 'none', label = 'optimal threshold')
             plt.xlabel('recall')
             plt.ylabel('precision')
             if showAP:
                 ap_str = "{0:.2f}%".format(average_precision * 100)
                 # ap_str = "{0:.4f}%".format(average_precision * 100)
-                plt.title('Precision x Recall curve \nClass: %s, AP: %s' % (str(classId), ap_str))
+                plt.title('Precision x Recall curve for %.1f IoU\nClass: %s, AP: %s' % (IOUThreshold, str(classId), ap_str))
             else:
                 plt.title('Precision x Recall curve \nClass: %s' % str(classId))
             plt.legend(shadow=True)
