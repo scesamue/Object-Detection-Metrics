@@ -129,14 +129,17 @@ class Evaluator:
             acc_FP = np.cumsum(FP)
             acc_TP = np.cumsum(TP)
             rec = acc_TP / npos
-            prec = np.divide(acc_TP, (acc_FP + acc_TP))
+            den = acc_FP + acc_TP
+            prec = np.divide(acc_TP, den, out=np.zeros(den.shape, dtype=float), where=acc_TP!=0)
 
 
             ################################################## ADDED #########################################
 
             #compute f2 score, which we want to maximize
             if fscore:
-                f_two = np.divide(2*np.multiply(rec, prec), rec + prec)
+                num = 2*np.multiply(rec, prec)
+                den = rec + prec
+                f_two = np.divide(num, den,  out=np.zeros(den.shape, dtype=float), where=num!=0)
                 max_f_two = np.amax(f_two)
                 print('the maximum f2 score is: ', max_f_two, '\n')
                 max_pos = np.where(f_two == max_f_two)[0]
@@ -166,7 +169,7 @@ class Evaluator:
                     for d in dects:
                         if gt_key in d:
                             index = dects.index(d)
-                            if dects[index][2] > 0.43:
+                            if dects[index][2] > confidence_thres:
                                 if FP[index] == 1:
                                     info = [dects[index][3], dects[index][2]]
                                     f_positive.append(info)

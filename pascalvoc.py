@@ -1,50 +1,3 @@
-###########################################################################################
-#                                                                                         #
-# This sample shows how to evaluate object detections applying the following metrics:     #
-#  * Precision x Recall curve       ---->       used by VOC PASCAL 2012)                  #
-#  * Average Precision (AP)         ---->       used by VOC PASCAL 2012)                  #
-#                                                                                         #
-# Developed by: Rafael Padilla (rafael.padilla@smt.ufrj.br)                               #
-#        SMT - Signal Multimedia and Telecommunications Lab                               #
-#        COPPE - Universidade Federal do Rio de Janeiro                                   #
-#        Last modification: Feb 12th 2021                                                 #
-###########################################################################################
-
-####################################################################################################
-#                                                                                                  #
-# THE CURRENT VERSION WAS UPDATED WITH A VISUAL INTERFACE, INCLUDING MORE METRICS AND SUPPORTING   #
-# OTHER FILE FORMATS. PLEASE ACCESS IT ACCESSED AT:                                                #
-#                                                                                                  #
-# https://github.com/rafaelpadilla/review_object_detection_metrics                                 #
-#                                                                                                  #
-# @Article{electronics10030279,                                                                    #
-#     author         = {Padilla, Rafael and Passos, Wesley L. and Dias, Thadeu L. B. and Netto,    #
-#                       Sergio L. and da Silva, Eduardo A. B.},                                    #
-#     title          = {A Comparative Analysis of Object Detection Metrics with a Companion        #
-#                       Open-Source Toolkit},                                                      #
-#     journal        = {Electronics},                                                              #
-#     volume         = {10},                                                                       #
-#     year           = {2021},                                                                     #
-#     number         = {3},                                                                        #
-#     article-number = {279},                                                                      #
-#     url            = {https://www.mdpi.com/2079-9292/10/3/279},                                  #
-#     issn           = {2079-9292},                                                                #
-#     doi            = {10.3390/electronics10030279}, }                                            #
-####################################################################################################
-
-####################################################################################################
-# If you use this project, please consider citing:                                                 #
-#                                                                                                  #
-# @INPROCEEDINGS {padillaCITE2020,                                                                 #
-#    author    = {R. {Padilla} and S. L. {Netto} and E. A. B. {da Silva}},                         #
-#    title     = {A Survey on Performance Metrics for Object-Detection Algorithms},                #
-#    booktitle = {2020 International Conference on Systems, Signals and Image Processing (IWSSIP)},#
-#    year      = {2020},                                                                           #
-#    pages     = {237-242},}                                                                       #
-#                                                                                                  #
-# This work is published at: https://github.com/rafaelpadilla/Object-Detection-Metrics             #
-####################################################################################################
-
 import argparse
 import glob
 import os
@@ -57,8 +10,7 @@ from BoundingBoxes import BoundingBoxes
 from Evaluator import *
 from utils import BBFormat
 
-def fun():
-    print('hello')
+
 # Validate formats
 def ValidateFormats(argFormat, argName, errors):
     if argFormat == 'xywh':
@@ -201,21 +153,7 @@ def getBoundingBoxes(directory,
 # Get current path to set default folders
 currentPath = os.path.dirname(os.path.abspath(__file__))
 
-VERSION = '0.2 (beta)'
-
-with open('message.txt', 'r') as f:
-    message = f'\n\n{f.read()}\n\n'
-
-print(message)
-
-parser = argparse.ArgumentParser(
-    prog='Object Detection Metrics - Pascal VOC',
-    description=
-    f'{message}\nThis project applies the most popular metrics used to evaluate object detection '
-    'algorithms.\nThe current implemention runs the Pascal VOC metrics.\nFor further references, '
-    'please check:\nhttps://github.com/rafaelpadilla/Object-Detection-Metrics',
-    epilog="Developed by: Rafael Padilla (rafael.padilla@smt.ufrj.br)")
-parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + VERSION)
+parser = argparse.ArgumentParser()
 # Positional arguments
 # Mandatory
 parser.add_argument('-gt',
