@@ -18,6 +18,7 @@ import numpy as np
 from BoundingBox import *
 from BoundingBoxes import *
 from utils import *
+np.set_printoptions(threshold=np.inf)
 
 
 class Evaluator:
@@ -131,14 +132,20 @@ class Evaluator:
             rec = acc_TP / npos
             den = acc_FP + acc_TP
             prec = np.divide(acc_TP, den, out=np.zeros(den.shape, dtype=float), where=acc_TP!=0)
-
+            
+            with open('/home/scesamue/Desktop/iou_0.75.txt', 'w') as f:
+                print(prec, file=f)
+                print('\n\n', file=f)
+                print(rec, file=f)
 
             ################################################## ADDED #########################################
 
             #compute f2 score, which we want to maximize
             if fscore:
-                num = 2*np.multiply(rec, prec)
-                den = rec + prec
+                beta = 0.25
+                num = (np.square(beta) + 1)*np.multiply(rec, prec)
+                den = rec + prec*np.square(beta)
+                
                 f_two = np.divide(num, den,  out=np.zeros(den.shape, dtype=float), where=num!=0)
                 max_f_two = np.amax(f_two)
                 print('the maximum f2 score is: ', max_f_two, '\n')
@@ -292,12 +299,12 @@ class Evaluator:
 
             plt.xlabel('recall')
             plt.ylabel('precision')
-            if showAP:
-                ap_str = "{0:.2f}%".format(average_precision * 100)
-                # ap_str = "{0:.4f}%".format(average_precision * 100)
-                plt.title('Precision x Recall curve for %.1f IoU\nClass: %s, AP: %s' % (IOUThreshold, str(classId), ap_str))
-            else:
-                plt.title('Precision x Recall curve \nClass: %s' % str(classId))
+            # if showAP:
+            #     ap_str = "{0:.2f}%".format(average_precision * 100)
+            #     ap_str = "{0:.4f}%".format(average_precision * 100)
+            #     plt.title('Precision x Recall curve for %.1f IoU\nClass: %s, AP: %s' % (IOUThreshold, str(classId), ap_str))
+            # else:
+            #     plt.title('Precision x Recall curve \nClass: %s' % str(classId))
             plt.legend(shadow=True)
             plt.grid()
             ############################################################
@@ -352,7 +359,7 @@ class Evaluator:
             #                 arrowprops=dict(arrowstyle="->", connectionstyle="arc3"),
             #                 bbox=box)
             if savePath is not None:
-                plt.savefig(os.path.join(savePath, str(classId) + '.png'))
+                plt.savefig(os.path.join(savePath, str(classId) + '.png'), dpi=400)
             if showGraphic is True:
                 plt.show()
                 # plt.waitforbuttonpress()
